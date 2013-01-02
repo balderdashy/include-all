@@ -5,7 +5,10 @@ module.exports = function requireAll(options) {
   var files;
   var modules = {};
   try { files = fs.readdirSync(options.dirname); }
-  catch (e) { return false; }
+  catch (e) { 
+    if (options.optional) return {};
+    else throw new Error('Directory not found: ' + options.dirname); 
+  }
 
   function excludeDirectory(dirname) {
     return options.excludeDirs && dirname.match(options.excludeDirs);
