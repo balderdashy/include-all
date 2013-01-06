@@ -5,13 +5,17 @@ module.exports = function requireAll(options) {
   var files;
   var modules = {};
 
-  // Try to get the starting directory
-  try {
-    files = fs.readdirSync(options.dirname);
-  } catch(e) {
-    if(options.optional) return {};
-    else throw new Error('Directory not found: ' + options.dirname);
+  // Lookup the starting directory
+  if(!options.startDirname) {
+    options.startDirname = options.dirname;
+    try {
+      files = fs.readdirSync(options.dirname);
+    } catch(e) {
+      if(options.optional) return {};
+      else throw new Error('Directory not found: ' + options.dirname);
+    }
   }
+
 
   // Iterate through files in the current directory
   files.forEach(function(file) {
@@ -27,23 +31,37 @@ module.exports = function requireAll(options) {
       modules[file] = requireAll({
         dirname: filepath,
         filter: options.filter,
+        pathFilter: options.pathFilter,
         excludeDirs: options.excludeDirs
       });
 
-    } 
+    }
     // For files, go ahead and add the code to the module map
     else {
-      var match = file.match(options.filter);
-      if(!match) return;
 
-      modules[match[1]] = require(filepath);
+      // Key name for module
+      var identity;
+
+      // Filename filter
+      if (options.filter) {
+        var match = file.match(options.filter);
+        if(!match) return;
+        identity = match[1];
+      }
+      // Full relative path filter
+      if (options.pathFilter) {
+        var pathMatch = filepath.match(options.pathFilter);
+        if (!pathMatch) return;
+        identity = pathMatch[1];
+      }
+      modules[identity] = require(filepath);
     }
   });
 
   // Pass map of modules back to app code
   return modules;
-};
 
-function excludeDirectory(dirname) {
-  return options.excludeDirs && dirname.match(options.excludeDirs);
-}
+  function excludeDirectory(dirname) {
+    return options.excludeDirs && dirname.match(options.excludeDirs);
+  }
+};
