@@ -33,8 +33,7 @@ module.exports = function requireAll(options) {
         filter: options.filter,
         pathFilter: options.pathFilter,
         excludeDirs: options.excludeDirs,
-        startDirname: options.startDirname,
-        parentDir: options.dirname
+        startDirname: options.startDirname
       });
 
     }

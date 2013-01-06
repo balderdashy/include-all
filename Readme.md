@@ -2,7 +2,9 @@
 
 An easy way to include all node.js modules within a directory.
 
-This is a fork of felixge's awesome module, require-all (https://github.com/felixge/node-require-all) which adds the ability to mark a call to `include-all` as **optional**.
+This is a fork of felixge's awesome module, require-all (https://github.com/felixge/node-require-all) which adds a few extra capabilities:
+- the ability to `include-all` a directory as **optional**.
+- the ability to filter by path, not just filename (pathFilter)
 
 
 ## Usage
@@ -20,6 +22,7 @@ var controllers = require('include-all')({
 // { HomeController: function HomeController(req, res) {...}, ...}
 
 
+### Optional include
 var models = require('include-all')({
   dirname     :  __dirname + '/models',
   filter      :  /(.+)\.js$/,
@@ -32,3 +35,10 @@ var models = require('include-all')({
 // for example:
 // { User: { attributes: {}, adapter: 'dirty', ...}, ...}
 ```
+
+### Filter by filepath
+var models = require('include-all')({
+  dirname     :  __dirname + '/controllers',
+  filterPath  :  /(.+)\/(.+)\.js$/,
+  excludeDirs :  /^\.(git|svn)$/
+});
