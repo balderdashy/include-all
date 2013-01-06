@@ -1,39 +1,49 @@
-var fs    = require('fs');
+var fs = require('fs');
 
 // Returns false if the directory doesn't exist
 module.exports = function requireAll(options) {
   var files;
   var modules = {};
-  try { files = fs.readdirSync(options.dirname); }
-  catch (e) { 
-    if (options.optional) return {};
-    else throw new Error('Directory not found: ' + options.dirname); 
+
+  // Try to get the starting directory
+  try {
+    files = fs.readdirSync(options.dirname);
+  } catch(e) {
+    if(options.optional) return {};
+    else throw new Error('Directory not found: ' + options.dirname);
   }
 
-  function excludeDirectory(dirname) {
-    return options.excludeDirs && dirname.match(options.excludeDirs);
-  }
-
+  // Iterate through files in the current directory
   files.forEach(function(file) {
     var filepath = options.dirname + '/' + file;
-    if (fs.statSync(filepath).isDirectory()) {
 
-      if (excludeDirectory(file)) return;
+    // For directories, continue to recursively include modules
+    if(fs.statSync(filepath).isDirectory()) {
 
+      // Ignore explicitly excluded directories
+      if(excludeDirectory(file)) return;
+
+      // Recursively call requireAll on each child directory
       modules[file] = requireAll({
-        dirname     :  filepath,
-        filter      :  options.filter,
-        excludeDirs :  options.excludeDirs
+        dirname: filepath,
+        filter: options.filter,
+        excludeDirs: options.excludeDirs
       });
 
-    } else {
+    } 
+    // For files, go ahead and add the code to the module map
+    else {
       var match = file.match(options.filter);
-      if (!match) return;
+      if(!match) return;
 
       modules[match[1]] = require(filepath);
     }
   });
 
+  // Pass map of modules back to app code
   return modules;
 };
 
+function excludeDirectory(dirname) {
+  return options.excludeDirs && dirname.match(options.excludeDirs);
+}
