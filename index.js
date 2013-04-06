@@ -1,4 +1,6 @@
 var fs = require('fs');
+var _ = {};
+_.str = require('underscore.string');
 
 // Returns false if the directory doesn't exist
 module.exports = function requireAll(options) {
