@@ -20,6 +20,9 @@
     "require",
     "directory"
   ],
+  "dependencies": {
+    "underscore.string": "2.3.1"
+  },
   "author": "felixge+thlorenz, adapted by Mike McNeil",
   "license": "MIT",
   "readmeFilename": "Readme.md"
