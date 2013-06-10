@@ -1,6 +1,6 @@
 var fs = require('fs');
-var _ = {};
-_.str = require('underscore.string');
+var ltrim = require('underscore.string').ltrim;
+
 
 // Returns false if the directory doesn't exist
 module.exports = function requireAll(options) {
@@ -35,7 +35,8 @@ module.exports = function requireAll(options) {
         filter: options.filter,
         pathFilter: options.pathFilter,
         excludeDirs: options.excludeDirs,
-        startDirname: options.startDirname
+        startDirname: options.startDirname,
+        dontLoad: options.dontLoad
       });
 
     }
@@ -58,15 +59,15 @@ module.exports = function requireAll(options) {
         var path = filepath.replace(options.startDirname,'');
         
         // make sure a slash exists on the left side of path
-        path = '/' + _.str.ltrim(path,'/');
+        path = '/' + ltrim(path,'/');
 
         var pathMatch = path.match(options.pathFilter);
         if (!pathMatch) return;
         identity = pathMatch[2];
       }
 
-      // Load module into memory
-      modules[identity] = require(filepath);
+      // Load module into memory (unless `dontLoad` is true)
+      modules[identity] = options.dontLoad ? true : require(filepath);
     }
   });
 

@@ -4,6 +4,7 @@ An easy way to include all node.js modules within a directory.
 
 This is a fork of felixge's awesome module, require-all (https://github.com/felixge/node-require-all) which adds a few extra capabilities:
 - the ability to `include-all` a directory as **optional**.
+- the ability to recursively stat a directory, instead of actually requiring the modules (via the `dontLoad` option)
 - the ability to filter by path, not just filename (pathFilter)
 
 
