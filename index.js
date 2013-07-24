@@ -7,15 +7,32 @@ module.exports = function requireAll(options) {
   var files;
   var modules = {};
 
+  // Sane default for `filter` option
+  if (!options.filter) {
+    options.filter = /(.*)/;
+  }
+
+  // Reset our depth counter the first time
+  if (typeof options._depth === 'undefined') {
+    options._depth = 0;
+  }
+
+  // Bail out if our counter has reached the desired depth
+  // indicated by the user in options.depth
+  if (typeof options.depth !== 'undefined' &&
+    options._depth >= options.depth) {
+    return;
+  }
+
   // Remember the starting directory
-  if(!options.startDirname) {
+  if (!options.startDirname) {
     options.startDirname = options.dirname;
   }
 
   try {
     files = fs.readdirSync(options.dirname);
-  } catch(e) {
-    if(options.optional) return {};
+  } catch (e) {
+    if (options.optional) return {};
     else throw new Error('Directory not found: ' + options.dirname);
   }
 
@@ -24,10 +41,10 @@ module.exports = function requireAll(options) {
     var filepath = options.dirname + '/' + file;
 
     // For directories, continue to recursively include modules
-    if(fs.statSync(filepath).isDirectory()) {
+    if (fs.statSync(filepath).isDirectory()) {
 
       // Ignore explicitly excluded directories
-      if(excludeDirectory(file)) return;
+      if (excludeDirectory(file)) return;
 
       // Recursively call requireAll on each child directory
       modules[file] = requireAll({
@@ -36,7 +53,11 @@ module.exports = function requireAll(options) {
         pathFilter: options.pathFilter,
         excludeDirs: options.excludeDirs,
         startDirname: options.startDirname,
-        dontLoad: options.dontLoad
+        dontLoad: options.dontLoad,
+
+        // Keep track of depth
+        _depth: options._depth+1,
+        depth: options.depth
       });
 
     }
@@ -49,17 +70,17 @@ module.exports = function requireAll(options) {
       // Filename filter
       if (options.filter) {
         var match = file.match(options.filter);
-        if(!match) return;
+        if (!match) return;
         identity = match[1];
       }
 
       // Full relative path filter
       if (options.pathFilter) {
         // Peel off relative path
-        var path = filepath.replace(options.startDirname,'');
-        
+        var path = filepath.replace(options.startDirname, '');
+
         // make sure a slash exists on the left side of path
-        path = '/' + ltrim(path,'/');
+        path = '/' + ltrim(path, '/');
 
         var pathMatch = path.match(options.pathFilter);
         if (!pathMatch) return;
