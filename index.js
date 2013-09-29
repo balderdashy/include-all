@@ -54,11 +54,16 @@ module.exports = function requireAll(options) {
         excludeDirs: options.excludeDirs,
         startDirname: options.startDirname,
         dontLoad: options.dontLoad,
+        markDirectories: options.markDirectories,
 
         // Keep track of depth
         _depth: options._depth+1,
         depth: options.depth
       });
+
+      if (options.markDirectories) {
+        modules[file].isDirectory = true;
+      }
 
     }
     // For files, go ahead and add the code to the module map
