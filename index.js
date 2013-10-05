@@ -55,6 +55,7 @@ module.exports = function requireAll(options) {
         startDirname: options.startDirname,
         dontLoad: options.dontLoad,
         markDirectories: options.markDirectories,
+        force: options.force,
 
         // Keep track of depth
         _depth: options._depth+1,
@@ -93,7 +94,15 @@ module.exports = function requireAll(options) {
       }
 
       // Load module into memory (unless `dontLoad` is true)
-      modules[identity] = options.dontLoad ? true : require(filepath);
+      if (options.dontLoad) {
+        modules[identity] = true;
+      } else {
+        if (options.force) {
+          var resolved = require.resolve(filepath);
+          if (require.cache[resolved]) delete require.cache[resolved];
+        }
+        modules[identity] = require(filepath);
+      }
     }
   });
 
