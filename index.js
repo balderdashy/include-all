@@ -55,6 +55,8 @@ module.exports = function requireAll(options) {
         startDirname: options.startDirname,
         dontLoad: options.dontLoad,
         markDirectories: options.markDirectories,
+        flattenDirectories: options.flattenDirectories,
+        keepDirectoryPath: options.keepDirectoryPath,
         force: options.force,
 
         // Keep track of depth
@@ -62,8 +64,27 @@ module.exports = function requireAll(options) {
         depth: options.depth
       });
 
-      if (options.markDirectories) {
+      if (options.markDirectories || options.flattenDirectories) {
         modules[file].isDirectory = true;
+      }
+
+      if (options.flattenDirectories) {
+
+        modules = (function flattenDirectories(modules, accum, path) {
+          accum = accum || {};
+          Object.keys(modules).forEach(function(identity) {
+            if (typeof(modules[identity]) !== 'object') {
+              return;
+            }
+            if (modules[identity].isDirectory) {
+              flattenDirectories(modules[identity], accum, path ? path + '/' + identity : identity );
+            } else {
+              accum[options.keepDirectoryPath ? (path ? path + '/' + identity : identity) : identity] = modules[identity];
+            }
+          });
+          return accum;
+        })(modules);
+
       }
 
     }
@@ -94,6 +115,7 @@ module.exports = function requireAll(options) {
       }
 
       // Load module into memory (unless `dontLoad` is true)
+      modules[identity] = options.dontLoad ? true : require(filepath);
       if (options.dontLoad) {
         modules[identity] = true;
       } else {
