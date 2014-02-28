@@ -73,7 +73,7 @@ module.exports = function requireAll(options) {
         modules = (function flattenDirectories(modules, accum, path) {
           accum = accum || {};
           Object.keys(modules).forEach(function(identity) {
-            if (typeof(modules[identity]) !== 'object') {
+            if (typeof(modules[identity]) !== 'object' && typeof(modules[identity]) !== 'function') {
               return;
             }
             if (modules[identity].isDirectory) {
