@@ -7,6 +7,10 @@ module.exports = function requireAll(options) {
   var files;
   var modules = {};
 
+  if (typeof(options.force) == 'undefined') {
+    options.force = true;
+  }
+
   // Sane default for `filter` option
   if (!options.filter) {
     options.filter = /(.*)/;
