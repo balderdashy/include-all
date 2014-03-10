@@ -119,7 +119,6 @@ module.exports = function requireAll(options) {
       }
 
       // Load module into memory (unless `dontLoad` is true)
-      modules[identity] = options.dontLoad ? true : require(filepath);
       if (options.dontLoad) {
         modules[identity] = true;
       } else {
