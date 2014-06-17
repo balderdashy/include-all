@@ -1,11 +1,15 @@
 var fs = require('fs');
+var basename = require('path').basename;
 var ltrim = require('underscore.string').ltrim;
 
 
 // Returns false if the directory doesn't exist
 module.exports = function requireAll(options) {
-  var files;
+  var paths = [];
+  var files = [];
   var modules = {};
+
+  paths = paths.concat(options.dirname)
 
   if (typeof(options.force) == 'undefined') {
     options.force = true;
@@ -30,19 +34,29 @@ module.exports = function requireAll(options) {
 
   // Remember the starting directory
   if (!options.startDirname) {
-    options.startDirname = options.dirname;
+    options.startDirname = paths;
   }
 
-  try {
-    files = fs.readdirSync(options.dirname);
-  } catch (e) {
-    if (options.optional) return {};
-    else throw new Error('Directory not found: ' + options.dirname);
-  }
+  // Iterate through all paths
+  paths.forEach(function(path) {
+
+    try {
+
+      // Iterate through all files in current path
+      fs.readdirSync(path).forEach(function(file) {
+        files.push(path + '/' + file);
+      });
+
+    } catch(e) {
+      if (options.optional) return {};
+      else throw new Error('Directory not found: ' + path);
+    }
+
+  });
 
   // Iterate through files in the current directory
-  files.forEach(function(file) {
-    var filepath = options.dirname + '/' + file;
+  files.forEach(function(filepath) {
+    var file = basename(filepath);
 
     // For directories, continue to recursively include modules
     if (fs.statSync(filepath).isDirectory()) {
@@ -56,7 +70,7 @@ module.exports = function requireAll(options) {
         filter: options.filter,
         pathFilter: options.pathFilter,
         excludeDirs: options.excludeDirs,
-        startDirname: options.startDirname,
+        startDirname: paths,
         dontLoad: options.dontLoad,
         markDirectories: options.markDirectories,
         flattenDirectories: options.flattenDirectories,
@@ -107,8 +121,11 @@ module.exports = function requireAll(options) {
 
       // Full relative path filter
       if (options.pathFilter) {
+        // This will replace any path
+        var replacementRegex = new RegExp('(' + options.startDirname.join('|') + ')', 'g');
+
         // Peel off relative path
-        var path = filepath.replace(options.startDirname, '');
+        var path = filepath.replace(replacementRegex, '');
 
         // make sure a slash exists on the left side of path
         path = '/' + ltrim(path, '/');
