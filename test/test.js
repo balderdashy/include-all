@@ -20,6 +20,36 @@ assert.deepEqual(controllers, {
   }
 });
 
+var multipleDirsControllers = requireAll({
+  dirname: [
+    __dirname + '/controllers',
+    __dirname + '/other-controllers'
+  ],
+  filter: /(.+Controller)\.js$/,
+  flattenDirectories: true
+});
+
+assert.deepEqual(multipleDirsControllers, {
+  'main-Controller': {
+    index: 1,
+    show: 2,
+    add: 3,
+    edit: 4
+  },
+
+  'other-Controller': {
+    index: 1,
+    show: 'nothing'
+  },
+
+  'subdir-Controller' : {
+    subdir: 'controller'
+  },
+
+  'helloworld-Controller': {
+    hello: 'world'
+  }
+});
 
 if (process.version > 'v0.6.0') {
   var mydir = requireAll({
