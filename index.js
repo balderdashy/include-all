@@ -11,6 +11,10 @@ module.exports = function requireAll(options) {
     options.force = true;
   }
 
+  if (typeof(options.useModuleName) == 'undefined') {
+    options.useModuleName = false;
+  }
+
   // Sane default for `filter` option
   if (!options.filter) {
     options.filter = /(.*)/;
@@ -126,7 +130,14 @@ module.exports = function requireAll(options) {
           var resolved = require.resolve(filepath);
           if (require.cache[resolved]) delete require.cache[resolved];
         }
-        modules[identity] = require(filepath);
+        var requiredModule = require(filepath);
+        if (options.useModuleName &&
+            typeof(requiredModule.name) != "undefined" &&
+            requiredModule.name != '') {
+          modules[requiredModule.name] = requiredModule;
+        } else {
+          modules[identity] = requiredModule;
+        }
       }
     }
   });

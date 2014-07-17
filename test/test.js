@@ -65,3 +65,13 @@ var excludedSvnAndSub = requireAll({
 assert.equal(excludedSvnAndSub['.svn'], undefined);
 assert.ok(excludedSvnAndSub['root']);
 assert.equal(excludedSvnAndSub['sub'], undefined);
+
+var useModuleName = requireAll({
+  dirname: __dirname + '/pages',
+  useModuleName: true,
+  filter: /(.+_page)\.js$/
+});
+
+assert.equal(typeof useModuleName.RootPage, 'function');
+assert.equal(typeof useModuleName.LoginPage, 'function');
+assert.notEqual(typeof useModuleName[''], 'function');
