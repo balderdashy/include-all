@@ -40,6 +40,13 @@ module.exports = function requireAll(options) {
     else throw new Error('Directory not found: ' + options.dirname);
   }
 
+  // Sort the result
+  if (!!options.sortResult) {
+    files = files.sort(function(a, b) {
+      return a < b ? -1 : 1;
+    });
+  }
+
   // Iterate through files in the current directory
   files.forEach(function(file) {
     var filepath = options.dirname + '/' + file;
