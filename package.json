@@ -1,6 +1,6 @@
 {
   "name": "include-all",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "An easy way to include all node.js modules within a directory.  This is a fork of felixge's awesome module, require-all (https://github.com/felixge/node-require-all) which adds the ability to mark an include as **optional**.",
   "main": "index.js",
   "directories": {
