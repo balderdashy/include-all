@@ -21,9 +21,10 @@ var controllers = require('include-all')({
 // controllers now is an object with references to all modules matching the filter
 // for example:
 // { HomeController: function HomeController(req, res) {...}, ...}
-
+```
 
 ### Optional include
+```js
 var models = require('include-all')({
   dirname     :  __dirname + '/models',
   filter      :  /(.+)\.js$/,
@@ -38,8 +39,10 @@ var models = require('include-all')({
 ```
 
 ### Filter by filepath
+```js
 var models = require('include-all')({
   dirname     :  __dirname + '/controllers',
   filterPath  :  /(.+)\/(.+)\.js$/,
   excludeDirs :  /^\.(git|svn)$/
 });
+```
