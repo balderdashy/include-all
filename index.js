@@ -45,7 +45,7 @@ module.exports = function requireAll(options) {
     var filepath = options.dirname + '/' + file;
 
     // For directories, continue to recursively include modules
-    if (fs.statSync(filepath).isDirectory()) {
+    if (!fs.lstatSync(filepath).isSymbolicLink() && fs.statSync(filepath).isDirectory()) {
 
       // Ignore explicitly excluded directories
       if (excludeDirectory(file)) return;
