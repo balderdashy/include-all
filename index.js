@@ -126,7 +126,11 @@ module.exports = function requireAll(options) {
           var resolved = require.resolve(filepath);
           if (require.cache[resolved]) delete require.cache[resolved];
         }
-        modules[identity] = require(filepath);
+        try{
+          modules[identity] = require(filepath);
+        }catch (e){
+          console.log('Include-all failed on :', filepath, e);
+        }
       }
     }
   });
