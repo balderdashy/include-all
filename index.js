@@ -1,9 +1,5 @@
 var fs = require('fs');
 var ltrim = require('underscore.string').ltrim;
-var object = require('underscore.object');
-var extend = object.extend;
-var isEmpty = object.isEmpty;
-var isFn = object.isFunction;
 
 
 module.exports = function requireAll(options) {
@@ -118,4 +114,22 @@ function collectLevel( context, modules, pathName, currentDepth, flattening ) {
   });
 
   return modules;
+}
+
+function extend( target ) {
+  for ( var arg, i = 1, l = arguments.length; i < l; i++ ) {
+    arg = arguments[i] || {};
+    Object.keys( arg )
+        .forEach( function( name ) { target[name] = arg[name]; } );
+  }
+
+  return target;
+}
+
+function isEmpty( value ) {
+  return !value || ( typeof value == "object" && !Object.keys( value ).length );
+}
+
+function isFn( value ) {
+  return typeof value === "function";
 }
