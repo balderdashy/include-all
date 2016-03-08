@@ -36,9 +36,9 @@ var models = require('include-all')({
 // for example:
 // { User: { attributes: {}, adapter: 'dirty', ...}, ...}
  
-
+ 
 ### Filter by filepath
-```
+
 var models = require('include-all')({
   dirname     :  __dirname + '/controllers',
   filterPath  :  /(.+)\/(.+)\.js$/,
