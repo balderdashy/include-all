@@ -1,140 +1,121 @@
 var fs = require('fs');
 var ltrim = require('underscore.string').ltrim;
+var object = require('underscore.object');
+var extend = object.extend;
+var isEmpty = object.isEmpty;
+var isFn = object.isFunction;
 
 
-// Returns false if the directory doesn't exist
 module.exports = function requireAll(options) {
-  var files;
-  var modules = {};
-
-  if (typeof(options.force) == 'undefined') {
-    options.force = true;
+  if ( typeof options === "string" ) {
+    options = { dirname: options };
   }
 
-  // Sane default for `filter` option
-  if (!options.filter) {
-    options.filter = /(.*)/;
-  }
+  var context = extend( {
+    // defaults:
+    force: true,
+    startDirname: options.dirname
+  }, options, {
+    // assure depth to be non-negative integer
+    depth: Math.max( 0, parseInt( options.depth ) || 0 ) || 9999
+  } );
 
-  // Reset our depth counter the first time
-  if (typeof options._depth === 'undefined') {
-    options._depth = 0;
-  }
+  // normalize any filter provided in options to be unconditionally callable
+  var exclFn = isFn(context.excludeDirs) ? context.excludeDirs : context.excludeDirs ? excludeDirectory: falsey;
+  var fileFn = context.filter && (isFn(context.filter) ? context.filter : filterFn);
+  var pathFn = context.pathFilter && (isFn(context.pathFilter) ? context.pathFilter : pathFilterFn);
+  var nameFn = (context.keepDirectoryPath && context.flattenDirectories) ? qualifyIdentity : passIdentity;
 
-  // Bail out if our counter has reached the desired depth
-  // indicated by the user in options.depth
-  if (typeof options.depth !== 'undefined' &&
-    options._depth >= options.depth) {
-    return;
-  }
+  return collectLevel( extend( context, {
+    excludeDirFn: exclFn,
+    fileFilterFn: fileFn,
+    pathFilterFn: pathFn,
+    identityFn: nameFn,
+    filterFn: ( fileFn && pathFn ) ? bothFilterFn : ( fileFn || pathFn || truthy )
+  } ), {}, options.dirname, 0, options.flattenDirectories );
+};
 
-  // Remember the starting directory
-  if (!options.startDirname) {
-    options.startDirname = options.dirname;
+
+function truthy() { return true; }
+function falsey() { return false; }
+
+function excludeDirectory(context, fileName, pathName, depth) {
+  return fileName.match(context.excludeDirs);
+}
+
+/** Processes regular expression provided in options.filter. */
+function filterFn(context, fileName, pathName, depth) {
+  var match = fileName.match(context.filter);
+  return match ? match[1] : undefined;
+}
+
+/** Processes regular expression provided in options.pathFilter. */
+function pathFilterFn(context, fileName, pathName, depth) {
+  var match = ('/' + ltrim(pathName.replace(context.startDirname, ''), '/')).match(context.pathFilter);
+  return match ? match[2] : undefined;
+}
+
+/** Processes both filters provided in options.filter and options.pathFilter. */
+function bothFilterFn(context, fileName, pathName, depth) {
+  return context.fileFilterFn(context, fileName, pathName, depth) &&
+         context.pathFilterFn(context, fileName, pathName, depth);
+}
+
+function qualifyIdentity(pathName, identity) {
+  return pathName + '/' + identity;
+}
+
+function passIdentity(pathName, identity) {
+  return identity;
+}
+
+/** Processes all matches in a given folder. */
+function collectLevel( context, modules, pathName, currentDepth, flattening ) {
+  if (currentDepth >= context.depth) {
+    return modules;
   }
 
   try {
-    files = fs.readdirSync(options.dirname);
+    var files = fs.readdirSync(pathName);
   } catch (e) {
-    if (options.optional) return {};
-    else throw new Error('Directory not found: ' + options.dirname);
+    if (context.optional) return modules;
+
+    throw new Error('Directory not found: ' + pathName);
   }
 
-  // Iterate through files in the current directory
   files.forEach(function(file) {
-    var filepath = options.dirname + '/' + file;
+    var filePath = pathName + '/' + file;
 
-    // For directories, continue to recursively include modules
-    if (fs.statSync(filepath).isDirectory()) {
+    if (fs.statSync(filePath).isDirectory()) {
+      if (context.excludeDirFn(context, file, pathName, currentDepth)) return;
 
-      // Ignore explicitly excluded directories
-      if (excludeDirectory(file)) return;
-
-      // Recursively call requireAll on each child directory
-      modules[file] = requireAll({
-        dirname: filepath,
-        filter: options.filter,
-        pathFilter: options.pathFilter,
-        excludeDirs: options.excludeDirs,
-        startDirname: options.startDirname,
-        dontLoad: options.dontLoad,
-        markDirectories: options.markDirectories,
-        flattenDirectories: options.flattenDirectories,
-        keepDirectoryPath: options.keepDirectoryPath,
-        force: options.force,
-
-        // Keep track of depth
-        _depth: options._depth+1,
-        depth: options.depth
-      });
-
-      if (options.markDirectories || options.flattenDirectories) {
-        modules[file].isDirectory = true;
-      }
-
-      if (options.flattenDirectories) {
-
-        modules = (function flattenDirectories(modules, accum, path) {
-          accum = accum || {};
-          Object.keys(modules).forEach(function(identity) {
-            if (typeof(modules[identity]) !== 'object' && typeof(modules[identity]) !== 'function') {
-              return;
-            }
-            if (modules[identity].isDirectory) {
-              flattenDirectories(modules[identity], accum, path ? path + '/' + identity : identity );
-            } else {
-              accum[options.keepDirectoryPath ? (path ? path + '/' + identity : identity) : identity] = modules[identity];
-            }
-          });
-          return accum;
-        })(modules);
-
-      }
-
-    }
-    // For files, go ahead and add the code to the module map
-    else {
-
-      // Key name for module
-      var identity;
-
-      // Filename filter
-      if (options.filter) {
-        var match = file.match(options.filter);
-        if (!match) return;
-        identity = match[1];
-      }
-
-      // Full relative path filter
-      if (options.pathFilter) {
-        // Peel off relative path
-        var path = filepath.replace(options.startDirname, '');
-
-        // make sure a slash exists on the left side of path
-        path = '/' + ltrim(path, '/');
-
-        var pathMatch = path.match(options.pathFilter);
-        if (!pathMatch) return;
-        identity = pathMatch[2];
-      }
-
-      // Load module into memory (unless `dontLoad` is true)
-      if (options.dontLoad) {
-        modules[identity] = true;
-      } else {
-        if (options.force) {
-          var resolved = require.resolve(filepath);
-          if (require.cache[resolved]) delete require.cache[resolved];
+      var sub = collectLevel(context, flattening ? modules : {}, filePath, currentDepth + 1, flattening);
+      if (!flattening && !isEmpty(sub)) {
+        if (context.markDirectories) {
+          sub.isDirectory = true;
         }
-        modules[identity] = require(filepath);
+
+        modules[file] = sub;
+      }
+    } else {
+      var module, identity = context.filterFn(context, file, pathName, currentDepth);
+      if (identity) {
+        if (context.dontLoad) {
+          module = true;
+        } else {
+          if (context.force) {
+            var resolved = require.resolve(filePath);
+            if (require.cache[resolved]) delete require.cache[resolved];
+          }
+          module = require(filePath);
+        }
+
+        if (!flattening || (module && (typeof module === 'object' || typeof module === 'function' ))) {
+          modules[context.identityFn(pathName, identity)] = module;
+        }
       }
     }
   });
 
-  // Pass map of modules back to app code
   return modules;
-
-  function excludeDirectory(dirname) {
-    return options.excludeDirs && dirname.match(options.excludeDirs);
-  }
-};
+}
