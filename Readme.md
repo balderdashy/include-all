@@ -35,9 +35,10 @@ var models = require('include-all')({
 // but if __dirname + /models doesn't exist, instead of throwing an error, {} is returned
 // for example:
 // { User: { attributes: {}, adapter: 'dirty', ...}, ...}
-```
+ 
 
 ### Filter by filepath
+```
 var models = require('include-all')({
   dirname     :  __dirname + '/controllers',
   filterPath  :  /(.+)\/(.+)\.js$/,
