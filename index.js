@@ -1,6 +1,7 @@
 var fs = require('fs');
 var ltrim = require('underscore.string').ltrim;
-
+var pjson = require('../../package.json');
+var clientsidePackages = pjson.clientsideDependencies;
 
 // Returns false if the directory doesn't exist
 module.exports = function requireAll(options) {
@@ -42,8 +43,15 @@ module.exports = function requireAll(options) {
 
   // Iterate through files in the current directory
   files.forEach(function(file) {
-    var filepath = options.dirname + '/' + file;
+    
+    //eleminating client side dependencies
+    if(clientsidePackages.indexOf(file) != -1){
+      console.warn("passed client side dependency :",file) 
+      return;
+    }
 
+    var filepath = options.dirname + '/' + file;
+    
     // For directories, continue to recursively include modules
     if (fs.statSync(filepath).isDirectory()) {
 
