@@ -1,10 +1,34 @@
-.\#*
-*#
+############################
+# npm
+############################
 node_modules
-ssl
+npm-debug.log
+
+
+############################
+# tmp, editor & OS files
+############################
+.tmp
+*.swo
+*.swp
+*.swn
+*.swm
 .DS_STORE
+*#
 *~
 .idea
 nbproject
-.waterline
-npm-debug.log
+
+
+############################
+# Tests
+############################
+testApp
+coverage
+isolate-0x*
+
+
+############################
+# Other
+############################
+.node_history
