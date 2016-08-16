@@ -111,7 +111,7 @@ var includeAll = require('include-all');
 
 `include-all` exposes 3 different methods for asynchronous usage.
 
-The following convenience methods take the same "options,cb" signature as the default `includeAll` function, and they support all of the same options.
+The following convenience methods take all the same options as the default `includeAll` function, but they also support a few _additional_ options.  Also, since they're asynchronous, they work a bit differently:  they use the conventional Node.js "options,cb" function signature.
 
 
 ##### .optional()
