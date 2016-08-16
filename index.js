@@ -151,7 +151,14 @@ module.exports = function includeAll(options) {
 
     // Iterate through files in the current directory
     files.forEach(function (file) {
+
       var filepath = path.join(thisDirname, file);
+      // `path.join()` does not preserve `./`-- but since that
+      // symbols has a special meaning when at the beginning of
+      // a `require()` path, we bring it back here.
+      if (thisDirname.match(/^\.\//) && !filepath.match(/^\.\//)) {
+        filepath = './' + filepath;
+      }
 
       // For directories, continue to recursively include modules
       if (fs.statSync(filepath).isDirectory()) {
@@ -177,10 +184,23 @@ module.exports = function includeAll(options) {
               if (typeof(_modules[keyName]) !== 'object' && typeof(_modules[keyName]) !== 'function') {
                 return;
               }
+
+              var nextPath;
+              if (thisPath) {
+                nextPath = path.join(thisPath, keyName);
+                // `path.join()` does not preserve `./`-- but since that
+                // symbols has a special meaning when at the beginning of
+                // a `require()` path, we bring it back here.
+                if (thisPath.match(/^\.\//) && !nextPath.match(/^\.\//)) {
+                  nextPath = './' + nextPath;
+                }
+              }
+              else { nextPath = keyName; }
+
               if (_modules[keyName].isDirectory) {
-                _recursivelyFlattenDirectories(_modules[keyName], accum, thisPath ? path.join(thisPath, keyName) : keyName );
+                _recursivelyFlattenDirectories(_modules[keyName], accum, nextPath);
               } else {
-                accum[options.keepDirectoryPath ? (thisPath ? path.join(thisPath, keyName) : keyName) : keyName] = _modules[keyName];
+                accum[options.keepDirectoryPath ? nextPath : keyName] = _modules[keyName];
               }
             });
             return accum;
@@ -228,7 +248,6 @@ module.exports = function includeAll(options) {
           // If `force: true` was set, wipe out the previous contents from
           // this spot in the require cache before proceeding.
           if (options.force) {
-            console.log('filepath:',filepath);
             var resolved = require.resolve(filepath);
             if (require.cache[resolved]) { delete require.cache[resolved]; }
           }
