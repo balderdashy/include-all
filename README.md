@@ -8,38 +8,83 @@ This is a fork of felixge's awesome module, require-all (https://github.com/feli
 - the ability to filter by path, not just filename (pathFilter)
 
 
+
 ## Usage
 
+#### Filter by filename or path
+
+
 ```js
+var path = require('include-all');
+var includeAll = require('include-all');
 
 var controllers = require('include-all')({
-  dirname     :  __dirname + '/controllers',
+  dirname     :  path.join(__dirname, 'controllers'),
   filter      :  /(.+Controller)\.js$/,
   excludeDirs :  /^\.(git|svn)$/
 });
 
-// controllers now is an object with references to all modules matching the filter
-// for example:
-// { HomeController: function HomeController(req, res) {...}, ...}
+```
 
 
-### Optional include
+`controllers` is now a dictionary with references to all modules matching the filter.
+The keys are the filenames (minus the extension).
+
+For example:
+
+```javascript
+{
+  PageController: {
+    showHomepage: function (req, res) { /*...*/ },
+    /*...*/
+  },
+  /*...*/
+}
+```
+
+> Keep in mind that the case-sensitivity of file and directory names varies between operating systems (Linux/Windows/Mac).
+
+
+You can also filter by directory names by looking further back in the path:
+
+```javascript
+var controller = require('include-all')({
+  dirname     :  path.join(__dirname, 'controllers'),
+  filterPath  :  /(.+)\/(.+)\.js$/,
+  excludeDirs :  /^\.(git|svn)$/
+});
+```
+
+
+#### Optional include
+
+Normally, if an error is encountered when requiring/reading/listing files or directories, it is thrown.  To swallow that error silently, set `optional: true`:
+
+```javascript
 var models = require('include-all')({
-  dirname     :  __dirname + '/models',
+  dirname     :  path.join(__dirname, 'models'),
   filter      :  /(.+)\.js$/,
   excludeDirs :  /^\.(git|svn)$/,
   optional    :  true
 });
 
-// models now is an object with references to all modules matching the filter
-// but if __dirname + /models doesn't exist, instead of throwing an error, {} is returned
-// for example:
-// { User: { attributes: {}, adapter: 'dirty', ...}, ...}
 ```
 
-### Filter by filepath
-var models = require('include-all')({
-  dirname     :  __dirname + '/controllers',
-  filterPath  :  /(.+)\/(.+)\.js$/,
-  excludeDirs :  /^\.(git|svn)$/
-});
+`models` is now a dictionary with references to all modules matching the filter.
+If `__dirname + '/models'` doesn't exist, instead of throwing an error, `{}` is returned.
+
+For example:
+
+```
+{
+  User: {
+    attributes: {},
+    datastore: 'localDiskDb',
+    /*...*/
+  },
+  /*...*/
+}
+```
+
+
+

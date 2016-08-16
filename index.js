@@ -2,16 +2,39 @@
  * Module dependencies
  */
 
+var path = require('path');
 var fs = require('fs');
 
 
 
-// Returns false if the directory doesn't exist
-module.exports = function requireAll(options) {
-  var files;
+// Returns false if the directory doesn't exist.
+
+/**
+ * includeAll()
+ *
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ * @required {String} dirname
+ *
+ * @optional {RegExp} filter
+ *
+ * @optional {RegExp} excludeDirs
+ *
+ * @optional {Number} depth
+ *
+ * @optional {Boolean} optional
+ *           @default false
+ *
+ * @optional {Boolean} dontLoad
+ *           @default false
+ * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ * @return {Dictionary}
+ *         A dictionary containing all the modules that were loaded.
+ *         Keys are filenames and values are module refs.
+ */
+module.exports = function includeAll(options) {
   var modules = {};
 
-  if (typeof(options.force) == 'undefined') {
+  if (typeof(options.force) === 'undefined') {
     options.force = true;
   }
 
@@ -37,25 +60,31 @@ module.exports = function requireAll(options) {
     options.startDirname = options.dirname;
   }
 
+  // List files in the specified directory.
+  var files;
   try {
     files = fs.readdirSync(options.dirname);
   } catch (e) {
     if (options.optional) { return {}; }
-    else { throw new Error('Directory not found: ' + options.dirname); }
+    else {
+      var dirNotFoundErr = new Error('Directory not found: ' + options.dirname + '\nDetails:' + e.stack);
+      dirNotFoundErr.code = 'include-all:DIRECTORY_NOT_FOUND';
+      throw dirNotFoundErr;
+    }
   }
 
   // Iterate through files in the current directory
   files.forEach(function(file) {
-    var filepath = options.dirname + '/' + file;
+    var filepath = path.join(options.dirname, file);
 
     // For directories, continue to recursively include modules
     if (fs.statSync(filepath).isDirectory()) {
 
       // Ignore explicitly excluded directories
-      if (excludeDirectory(file)) { return; }
+      if (options.excludeDirs && file.match(options.excludeDirs)) { return; }
 
-      // Recursively call requireAll on each child directory
-      modules[file] = requireAll({
+      // Recursively call includeAll on each child directory
+      modules[file] = includeAll({
         dirname: filepath,
         filter: options.filter,
         pathFilter: options.pathFilter,
@@ -78,67 +107,66 @@ module.exports = function requireAll(options) {
 
       if (options.flattenDirectories) {
 
-        modules = (function flattenDirectories(modules, accum, path) {
+        modules = (function _recursivelyFlattenDirectories(modules, accum, thisPath) {
           accum = accum || {};
-          Object.keys(modules).forEach(function(identity) {
-            if (typeof(modules[identity]) !== 'object' && typeof(modules[identity]) !== 'function') {
-              { return; }
+          Object.keys(modules).forEach(function(keyName) {
+            if (typeof(modules[keyName]) !== 'object' && typeof(modules[keyName]) !== 'function') {
+              return;
             }
-            if (modules[identity].isDirectory) {
-              flattenDirectories(modules[identity], accum, path ? path + '/' + identity : identity );
+            if (modules[keyName].isDirectory) {
+              _recursivelyFlattenDirectories(modules[keyName], accum, thisPath ? path.join(thisPath, keyName) : keyName );
             } else {
-              accum[options.keepDirectoryPath ? (path ? path + '/' + identity : identity) : identity] = modules[identity];
+              accum[options.keepDirectoryPath ? (thisPath ? path.join(thisPath, keyName) : keyName) : keyName] = modules[keyName];
             }
           });
           return accum;
         })(modules);
 
-      }
+      }//</if options.flattenDirectories>
 
-    }
-    // For files, go ahead and add the code to the module map
+    }//</if (this is a directory)>
+
+    // Otherwise, this is a file.
+    // So we'll go ahead and add a key for it in our module map.
     else {
 
       // Key name for module
-      var identity;
+      var keyName;
 
       // Filename filter
       if (options.filter) {
         var match = file.match(options.filter);
         if (!match) { return; }
-        identity = match[1];
+        keyName = match[1];
       }
 
       // Full relative path filter
       if (options.pathFilter) {
         // Peel off relative path
-        var path = filepath.replace(options.startDirname, '');
+        var relPath = filepath.replace(options.startDirname, '');
 
         // Make sure exactly one slash exists on the left side of path.
-        path = path.replace(/^\/*/, '/');
+        relPath = relPath.replace(/^\/*/, '/');
 
-        var pathMatch = path.match(options.pathFilter);
+        var pathMatch = relPath.match(options.pathFilter);
         if (!pathMatch) { return; }
-        identity = pathMatch[2];
+        keyName = pathMatch[2];
       }
 
       // Load module into memory (unless `dontLoad` is true)
       if (options.dontLoad) {
-        modules[identity] = true;
+        modules[keyName] = true;
       } else {
         if (options.force) {
           var resolved = require.resolve(filepath);
-          if (require.cache[resolved]) delete require.cache[resolved];
+          if (require.cache[resolved]) { delete require.cache[resolved]; }
         }
-        modules[identity] = require(filepath);
+        modules[keyName] = require(filepath);
       }
-    }
+    }//</else (this is a file)>
   });
 
   // Pass map of modules back to app code
   return modules;
 
-  function excludeDirectory(dirname) {
-    return options.excludeDirs && dirname.match(options.excludeDirs);
-  }
 };
