@@ -23,7 +23,7 @@ First, here are some examples of the low-level, synchronous usage:
 
 
 ```js
-var path = require('include-all');
+var path = require('path');
 var includeAll = require('include-all');
 
 var controllers = require('include-all')({
