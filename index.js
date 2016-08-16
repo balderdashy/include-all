@@ -58,6 +58,46 @@ var fs = require('fs');
  *         A dictionary containing all the modules that were loaded.
  *         Keys are filenames and values are either module references
  *         or `true` (if `dontLoad` was passed in.)
+ *
+ * For example, this might return:
+ *
+ * ```
+ * {
+ *   api: {
+ *     controllers: {
+ *       UserController: { find: function (req, res) {} },
+ *       PetController: { create: function (req, res) {} },
+ *     },
+ *     models: {
+ *       User: { schema: false },
+ *       Pet: { attributes: {} },
+ *     },
+ *     policies: {
+ *       isLoggedIn: function (req, res) {}
+ *     },
+ *   }
+ * }
+ * ```
+ *
+ * OR it might return:
+ *
+ * ```
+ * {
+ *   api: {
+ *     controllers: {
+ *       UserController: true,
+ *       PetController: true
+ *     },
+ *     models: {
+ *       User: true,
+ *       Pet: true
+ *     },
+ *     policies: {
+ *       isLoggedIn: true
+ *     }
+ *   }
+ * }
+ * ```
  */
 
 module.exports = function includeAll(options) {
