@@ -13,17 +13,44 @@ var fs = require('fs');
  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  * @required {String} dirname
+ *           The initial directory.
  *
  * @optional {RegExp} filter
+ *           A regular expression used to filter modules by filenames.
+ *
+ * @optional {RegExp} pathFilter
+ *           A regular expression used to filter modules by their entire paths.
  *
  * @optional {RegExp} excludeDirs
+ *           A regular expression used to EXCLUDE directories by name.
  *
  * @optional {Number} depth
+ *           The maximum depth to traverse.  A depth of `1` means only the top-level contents of the initial directory will be returned.
+ *           By default, there is no max depth (it is infinite).
  *
  * @optional {Boolean} optional
+ *           If set, then if an error is thrown when attempting to list directory contents, ignore it, fail silently, and continue.
  *           @default false
  *
  * @optional {Boolean} dontLoad
+ *           If set, then just set the right-hand side in the dictionary to `true` (rather than a module reference).
+ *           @default false
+ *
+ * @optional {Boolean} force
+ *           When set, any past require cache entry will be cleared before re-requiring a module.
+ *           @default true
+ *
+ * @optional {Boolean} keepDirectoryPath
+ *           TODO: document
+ *           Note that flattenDirectories must also be set to `true` for this to work.
+ *           @default false
+ *
+ * @optional {Boolean} flattenDirectories
+ *           TODO: document
+ *           @default false
+ *
+ * @optional {Boolean} markDirectories
+ *           TODO: document
  *           @default false
  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -57,145 +84,127 @@ module.exports = function includeAll(options) {
   }
 
 
-  var modules = {};
+  var modules = (function _recursivelyIncludeAll(thisDirname, _depth){
 
+    var _modules = {};
 
-
-  // Reset our depth counter the first time
-  if (typeof options._depth === 'undefined') {
-    options._depth = 0;
-  }
-
-  // Bail out if our counter has reached the desired depth
-  // indicated by the user in options.depth
-  if (typeof options.depth !== 'undefined' &&
-    options._depth >= options.depth) {
-    return;
-  }
-
-  // Remember the starting directory
-  if (!options.startDirname) {
-    options.startDirname = options.dirname;
-  }
-
-
-  // List files in the specified directory.
-  var files;
-  try {
-    files = fs.readdirSync(options.dirname);
-  }
-  catch (e) {
-    if (options.optional) { return {}; }
-    else {
-      var dirNotFoundErr = new Error('`include-all` could not scan directory (`' + options.dirname + '`) could not be scanned for files.\nDetails:' + e.stack);
-      dirNotFoundErr.code = 'include-all:DIRECTORY_NOT_FOUND';
-      throw dirNotFoundErr;
+    // Bail out if our counter has reached the desired depth
+    // originally indicated by the user in `options.depth`.
+    if (typeof options.depth !== 'undefined' && _depth >= options.depth) {
+      return;
     }
-  }
 
-
-  // Iterate through files in the current directory
-  files.forEach(function (file) {
-    var filepath = path.join(options.dirname, file);
-
-    // For directories, continue to recursively include modules
-    if (fs.statSync(filepath).isDirectory()) {
-
-      // Ignore explicitly excluded directories
-      if (options.excludeDirs && file.match(options.excludeDirs)) { return; }
-
-      // Recursively call includeAll on each child directory
-      modules[file] = includeAll({
-        dirname: filepath,
-        filter: options.filter,
-        pathFilter: options.pathFilter,
-        excludeDirs: options.excludeDirs,
-        startDirname: options.startDirname,
-        dontLoad: options.dontLoad,
-        markDirectories: options.markDirectories,
-        flattenDirectories: options.flattenDirectories,
-        keepDirectoryPath: options.keepDirectoryPath,
-        force: options.force,
-
-        // Keep track of depth
-        _depth: options._depth+1,
-        depth: options.depth
-      });
-
-      if (options.markDirectories || options.flattenDirectories) {
-        modules[file].isDirectory = true;
-      }
-
-      if (options.flattenDirectories) {
-
-        modules = (function _recursivelyFlattenDirectories(modules, accum, thisPath) {
-          accum = accum || {};
-          Object.keys(modules).forEach(function (keyName) {
-            if (typeof(modules[keyName]) !== 'object' && typeof(modules[keyName]) !== 'function') {
-              return;
-            }
-            if (modules[keyName].isDirectory) {
-              _recursivelyFlattenDirectories(modules[keyName], accum, thisPath ? path.join(thisPath, keyName) : keyName );
-            } else {
-              accum[options.keepDirectoryPath ? (thisPath ? path.join(thisPath, keyName) : keyName) : keyName] = modules[keyName];
-            }
-          });
-          return accum;
-        })(modules);
-
-      }//</if options.flattenDirectories>
-
-    }//</if (this is a directory)>
-
-    // Otherwise, this is a file.
-    // So we'll go ahead and add a key for it in our module map.
-    else {
-
-      // Key name for module
-      var keyName;
-
-      // Filename filter
-      if (options.filter) {
-        var match = file.match(options.filter);
-        if (!match) { return; }
-        keyName = match[1];
-      }
-
-      // Full relative path filter
-      if (options.pathFilter) {
-        // Peel off relative path
-        var relPath = filepath.replace(options.startDirname, '');
-
-        // Make sure exactly one slash exists on the left side of path.
-        relPath = relPath.replace(/^\/*/, '/');
-
-        var pathMatch = relPath.match(options.pathFilter);
-        if (!pathMatch) { return; }
-        keyName = pathMatch[2];
-      }
-
-      // Load module into memory (unless `dontLoad` is true)
-      if (options.dontLoad) {
-        modules[keyName] = true;
-      }
+    // List files in the specified directory.
+    var files;
+    try {
+      files = fs.readdirSync(thisDirname);
+    }
+    catch (e) {
+      if (options.optional) { return {}; }
       else {
+        var dirNotFoundErr = new Error('`include-all` could not scan directory (`' + thisDirname + '`) could not be scanned for files.\nDetails:' + e.stack);
+        dirNotFoundErr.code = 'include-all:DIRECTORY_NOT_FOUND';
+        throw dirNotFoundErr;
+      }
+    }
 
-        // If `force: true` was set, wipe out the previous contents from
-        // this spot in the require cache before proceeding.
-        if (options.force) {
-          var resolved = require.resolve(filepath);
-          if (require.cache[resolved]) { delete require.cache[resolved]; }
+
+    // Iterate through files in the current directory
+    files.forEach(function (file) {
+      var filepath = path.join(thisDirname, file);
+
+      // For directories, continue to recursively include modules
+      if (fs.statSync(filepath).isDirectory()) {
+
+        // Ignore explicitly excluded directories
+        if (options.excludeDirs && file.match(options.excludeDirs)) { return; }
+
+        // Recursively call `_recursivelyIncludeAll` on this child directory.
+        _modules[file] = _recursivelyIncludeAll(
+          filepath, // new dirname for recursive step
+          _depth+1  // new depth for recursive step
+        );
+
+        if (options.markDirectories || options.flattenDirectories) {
+          _modules[file].isDirectory = true;
         }
 
-        // Require the module.
-        modules[keyName] = require(filepath);
-      }
+        if (options.flattenDirectories) {
 
-    }//</else (this is a file)>
-  });//</each file>
+          _modules = (function _recursivelyFlattenDirectories(_modules, accum, thisPath) {
+            accum = accum || {};
+            Object.keys(_modules).forEach(function (keyName) {
+              if (typeof(_modules[keyName]) !== 'object' && typeof(_modules[keyName]) !== 'function') {
+                return;
+              }
+              if (_modules[keyName].isDirectory) {
+                _recursivelyFlattenDirectories(_modules[keyName], accum, thisPath ? path.join(thisPath, keyName) : keyName );
+              } else {
+                accum[options.keepDirectoryPath ? (thisPath ? path.join(thisPath, keyName) : keyName) : keyName] = _modules[keyName];
+              }
+            });
+            return accum;
+          })(_modules);
+
+        }//</if options.flattenDirectories>
+
+      }//</if (this is a directory)>
+
+      // Otherwise, this is a file.
+      // So we'll go ahead and add a key for it in our module map.
+      else {
+
+        // Key name for module.
+        var keyName;
+
+        // Filename filter
+        if (options.filter) {
+          var match = file.match(options.filter);
+          if (!match) { return; }
+          keyName = match[1];
+        }
+
+        // Full relative path filter
+        if (options.pathFilter) {
+          // Peel off just the relative path (remove the initial dirname)
+          var relPath = filepath.replace(options.dirname, '');
+
+          // Make sure exactly one slash exists on the left side of path.
+          relPath = relPath.replace(/^\/*/, '/');
+
+          var pathMatch = relPath.match(options.pathFilter);
+          if (!pathMatch) { return; }
+          keyName = pathMatch[2];
+        }
+
+        // Load module into memory (unless `dontLoad` is true)
+        if (options.dontLoad) {
+          _modules[keyName] = true;
+        }
+        else {
+
+          // If `force: true` was set, wipe out the previous contents from
+          // this spot in the require cache before proceeding.
+          if (options.force) {
+            var resolved = require.resolve(filepath);
+            if (require.cache[resolved]) { delete require.cache[resolved]; }
+          }
+
+          // Require the module.
+          _modules[keyName] = require(filepath);
+        }
+
+      }//</else (this is a file)>
+    });//</each file>
 
 
-  // Pass map of modules back to userland code.
+    // Pass these modules back to the previous recursive step.
+    return _modules;
+  })(options.dirname, 0);
+  // ^set up dirname, and start the depth counter at 0
+
+
+  // Now that all modules have been gathered up, pass map of modules back to userland code.
   return modules;
 
 };

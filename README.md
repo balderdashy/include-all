@@ -45,12 +45,12 @@ For example:
 > Keep in mind that the case-sensitivity of file and directory names varies between operating systems (Linux/Windows/Mac).
 
 
-You can also filter by directory names by looking further back in the path:
+You can also filter by directory names from further back in the path by using `pathFilter`:
 
 ```javascript
 var controller = require('include-all')({
   dirname     :  path.join(__dirname, 'controllers'),
-  filterPath  :  /(.+)\/(.+)\.js$/,
+  pathFilter  :  /(.+)\/(.+)\.js$/,
   excludeDirs :  /^\.(git|svn)$/
 });
 ```
