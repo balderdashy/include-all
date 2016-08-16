@@ -267,10 +267,12 @@ module.exports = function includeAll(options) {
             // Skip this module silently if `ignoreRequireFailures` is enabled.
             if (options.ignoreRequireFailures) { return; }
             else {
-              var couldNotRequireErr = new Error('`include-all` attempted to `require('+filepath+')`, but an error occurred:: \nDetails:' + e.stack);
-              couldNotRequireErr.originalError = e;
-              couldNotRequireErr.code = 'include-all:COULD_NOT_REQUIRE';
-              throw couldNotRequireErr;
+              e.originalErrorCode = e.code;
+              e.code = 'include-all:COULD_NOT_REQUIRE';
+              // Maintain the original stack trace at the top lvl (because it might have a useful line number from app-level code)
+              // but prepend an additional message to clarify what's going on.
+              e.stack = '`include-all` attempted to `require('+filepath+')`, but an error occurred:: \nDetails:' + e.stack;
+              throw e;
             }
           }//</catch>
         }
