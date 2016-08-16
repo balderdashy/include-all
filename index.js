@@ -32,6 +32,10 @@ var fs = require('fs');
  *           If set, then if an error is thrown when attempting to list directory contents, ignore it, fail silently, and continue.
  *           @default false
  *
+ * @optional {Boolean} ignoreRequireFailures
+ *           If set, then if an error is thrown when attempting to require a module, ignore the error, fail silently, and continue.
+ *           @default false
+ *
  * @optional {Boolean} dontLoad
  *           If set, then just set the right-hand side in the dictionary to `true` (rather than a module reference).
  *           @default false
@@ -144,6 +148,7 @@ module.exports = function includeAll(options) {
       else {
         var dirNotFoundErr = new Error('`include-all` could not scan directory (`' + thisDirname + '`) could not be scanned for files.\nDetails:' + e.stack);
         dirNotFoundErr.code = 'include-all:DIRECTORY_NOT_FOUND';
+        dirNotFoundErr.originalError = e;
         throw dirNotFoundErr;
       }
     }
@@ -239,10 +244,13 @@ module.exports = function includeAll(options) {
           keyName = pathMatch[2];
         }
 
-        // Load module into memory (unless `dontLoad` is true)
+        // If `dontLoad` is true, then don't load anything--
+        // instead just set the RHS to `true`.
         if (options.dontLoad) {
           _modules[keyName] = true;
         }
+        // Otherwise, dontLoad is falsey (the default), so we'll load
+        // this module into memory using `require()`
         else {
 
           // If `force: true` was set, wipe out the previous contents from
@@ -253,7 +261,18 @@ module.exports = function includeAll(options) {
           }
 
           // Require the module.
-          _modules[keyName] = require(filepath);
+          try {
+            _modules[keyName] = require(filepath);
+          } catch (e) {
+            // Skip this module silently if `ignoreRequireFailures` is enabled.
+            if (options.ignoreRequireFailures) { return; }
+            else {
+              var couldNotRequireErr = new Error('`include-all` attempted to `require('+filepath+')`, but an error occurred:: \nDetails:' + e.stack);
+              couldNotRequireErr.originalError = e;
+              couldNotRequireErr.code = 'include-all:COULD_NOT_REQUIRE';
+              throw couldNotRequireErr;
+            }
+          }//</catch>
         }
 
       }//</else (this is a file)>
