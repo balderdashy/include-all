@@ -1,7 +1,15 @@
-var assert = require('assert');
-var requireAll = require('..');
+/**
+ * Module dependencies
+ */
 
-var controllers = requireAll({
+var assert = require('assert');
+var includeAll = require('../');
+
+
+
+
+
+var controllers = includeAll({
   dirname: __dirname + '/controllers',
   filter: /(.+Controller)\.js$/
 });
@@ -22,7 +30,7 @@ assert.deepEqual(controllers, {
 
 
 if (process.version > 'v0.6.0') {
-  var mydir = requireAll({
+  var mydir = includeAll({
     dirname: __dirname + '/mydir',
     filter: /(.+)\.(js|json)$/
   });
@@ -37,7 +45,7 @@ if (process.version > 'v0.6.0') {
   });
 }
 
-var unfiltered = requireAll({
+var unfiltered = includeAll({
   dirname: __dirname + '/filterdir',
   filter: /(.+)\.js$/
 });
@@ -46,7 +54,7 @@ assert(unfiltered['.svn']);
 assert(unfiltered['root']);
 assert(unfiltered['sub']);
 
-var excludedSvn = requireAll({
+var excludedSvn = includeAll({
   dirname: __dirname + '/filterdir',
   filter: /(.+)\.js$/,
   excludeDirs: /^\.svn$/
@@ -56,7 +64,7 @@ assert.equal(excludedSvn['.svn'], undefined);
 assert.ok(excludedSvn['root']);
 assert.ok(excludedSvn['sub']);
 
-var excludedSvnAndSub = requireAll({
+var excludedSvnAndSub = includeAll({
   dirname: __dirname + '/filterdir',
   filter: /(.+)\.js$/,
   excludeDirs: /^(\.svn|sub)$/

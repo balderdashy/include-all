@@ -1,5 +1,9 @@
+/**
+ * Module dependencies
+ */
+
 var fs = require('fs');
-var ltrim = require('underscore.string').ltrim;
+
 
 
 // Returns false if the directory doesn't exist
@@ -36,8 +40,8 @@ module.exports = function requireAll(options) {
   try {
     files = fs.readdirSync(options.dirname);
   } catch (e) {
-    if (options.optional) return {};
-    else throw new Error('Directory not found: ' + options.dirname);
+    if (options.optional) { return {}; }
+    else { throw new Error('Directory not found: ' + options.dirname); }
   }
 
   // Iterate through files in the current directory
@@ -48,7 +52,7 @@ module.exports = function requireAll(options) {
     if (fs.statSync(filepath).isDirectory()) {
 
       // Ignore explicitly excluded directories
-      if (excludeDirectory(file)) return;
+      if (excludeDirectory(file)) { return; }
 
       // Recursively call requireAll on each child directory
       modules[file] = requireAll({
@@ -78,7 +82,7 @@ module.exports = function requireAll(options) {
           accum = accum || {};
           Object.keys(modules).forEach(function(identity) {
             if (typeof(modules[identity]) !== 'object' && typeof(modules[identity]) !== 'function') {
-              return;
+              { return; }
             }
             if (modules[identity].isDirectory) {
               flattenDirectories(modules[identity], accum, path ? path + '/' + identity : identity );
@@ -101,7 +105,7 @@ module.exports = function requireAll(options) {
       // Filename filter
       if (options.filter) {
         var match = file.match(options.filter);
-        if (!match) return;
+        if (!match) { return; }
         identity = match[1];
       }
 
@@ -110,11 +114,11 @@ module.exports = function requireAll(options) {
         // Peel off relative path
         var path = filepath.replace(options.startDirname, '');
 
-        // make sure a slash exists on the left side of path
-        path = '/' + ltrim(path, '/');
+        // Make sure exactly one slash exists on the left side of path.
+        path = path.replace(/^\/*/, '/');
 
         var pathMatch = path.match(options.pathFilter);
-        if (!pathMatch) return;
+        if (!pathMatch) { return; }
         identity = pathMatch[2];
       }
 
