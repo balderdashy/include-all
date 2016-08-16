@@ -204,7 +204,9 @@ module.exports = function includeAll(options) {
           keyName = match[1];
         }
 
-        // Full relative path filter
+        // ADDITIONAL full relative path filter.
+        // (only relevant if we made it past the first filter.
+        //  Note that the key name from here takes precedence.)
         if (options.pathFilter) {
           // Peel off just the relative path (remove the initial dirname)
           var relPath = filepath.replace(options.dirname, '');
@@ -226,6 +228,7 @@ module.exports = function includeAll(options) {
           // If `force: true` was set, wipe out the previous contents from
           // this spot in the require cache before proceeding.
           if (options.force) {
+            console.log('filepath:',filepath);
             var resolved = require.resolve(filepath);
             if (require.cache[resolved]) { delete require.cache[resolved]; }
           }
