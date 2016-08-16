@@ -7,7 +7,6 @@ var fs = require('fs');
 
 
 
-// Returns false if the directory doesn't exist.
 
 /**
  * includeAll()
@@ -26,6 +25,7 @@ var fs = require('fs');
  *
  * @optional {Boolean} dontLoad
  *           @default false
+ *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  * @return {Dictionary}
  *         A dictionary containing all the modules that were loaded.
@@ -74,7 +74,7 @@ module.exports = function includeAll(options) {
   }
 
   // Iterate through files in the current directory
-  files.forEach(function(file) {
+  files.forEach(function (file) {
     var filepath = path.join(options.dirname, file);
 
     // For directories, continue to recursively include modules
@@ -109,7 +109,7 @@ module.exports = function includeAll(options) {
 
         modules = (function _recursivelyFlattenDirectories(modules, accum, thisPath) {
           accum = accum || {};
-          Object.keys(modules).forEach(function(keyName) {
+          Object.keys(modules).forEach(function (keyName) {
             if (typeof(modules[keyName]) !== 'object' && typeof(modules[keyName]) !== 'function') {
               return;
             }
@@ -156,17 +156,19 @@ module.exports = function includeAll(options) {
       // Load module into memory (unless `dontLoad` is true)
       if (options.dontLoad) {
         modules[keyName] = true;
-      } else {
+      }
+      else {
         if (options.force) {
           var resolved = require.resolve(filepath);
           if (require.cache[resolved]) { delete require.cache[resolved]; }
         }
         modules[keyName] = require(filepath);
       }
-    }//</else (this is a file)>
-  });
 
-  // Pass map of modules back to app code
+    }//</else (this is a file)>
+  });//</each file>
+
+  // Pass map of modules back to userland code.
   return modules;
 
 };
