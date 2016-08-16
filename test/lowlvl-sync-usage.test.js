@@ -7,12 +7,12 @@ var includeAll = require('../');
 
 
 
-describe('basic usage', function(){
+describe('basic usage of synchronous, low-level function', function(){
 
   it('should have loaded stuff as expected', function (){
 
     var controllers = includeAll({
-      dirname: __dirname + '/controllers',
+      dirname: __dirname + '/fixtures/lowlvl/controllers',
       filter: /(.+Controller)\.js$/
     });
 
@@ -33,7 +33,7 @@ describe('basic usage', function(){
 
     if (process.version > 'v0.6.0') {
       var mydir = includeAll({
-        dirname: __dirname + '/mydir',
+        dirname: __dirname + '/fixtures/lowlvl/mydir',
         filter: /(.+)\.(js|json)$/
       });
 
@@ -48,7 +48,7 @@ describe('basic usage', function(){
     }
 
     var unfiltered = includeAll({
-      dirname: __dirname + '/filterdir',
+      dirname: __dirname + '/fixtures/lowlvl/filterdir',
       filter: /(.+)\.js$/
     });
 
@@ -57,7 +57,7 @@ describe('basic usage', function(){
     assert(unfiltered['sub']);
 
     var excludedSvn = includeAll({
-      dirname: __dirname + '/filterdir',
+      dirname: __dirname + '/fixtures/lowlvl/filterdir',
       filter: /(.+)\.js$/,
       excludeDirs: /^\.svn$/
     });
@@ -67,7 +67,7 @@ describe('basic usage', function(){
     assert.ok(excludedSvn['sub']);
 
     var excludedSvnAndSub = includeAll({
-      dirname: __dirname + '/filterdir',
+      dirname: __dirname + '/fixtures/lowlvl/filterdir',
       filter: /(.+)\.js$/,
       excludeDirs: /^(\.svn|sub)$/
     });
@@ -78,5 +78,5 @@ describe('basic usage', function(){
 
   });//</it should have loaded stuff as expected>
 
-});//</describe>
+});//</describe :: basic usage of synchronous, low-level function>
 
