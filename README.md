@@ -293,8 +293,8 @@ require('include-all').aggregate({
 | filter      | only include modules whose FILENAME matches this regex. default `undefined`
 | pathFilter  | only include modules whose FULL RELATIVE PATH matches this regex (relative from the entry point directory). default `undefined`
 | dontLoad    | if `dontLoad` is set to true, don't run the module w/ V8 or load it into memory-- instead, return a tree representing the directory structure (all extant file leaves are included as keys, with their value = `true`)
-| flattenDirectories | if enabled, ALL modules appear as top-level keys in the dictionary-- even those from within nested directories.
-| keepDirectoryPath | Only relevant if `flattenDictionaries` is `true`.  If enabled, this option causes include-all to include the directory path in the key names.
+| flatten     | if enabled, ALL modules appear as top-level keys in the dictionary-- even those from within nested directories.
+| keepDirectoryPath | Only relevant if `flatten` is `true`.  If enabled, this option causes include-all to include the relative paths in the key names (for nested modules from subdirectories path in the key names).
 
 
 ## High-Level Options
