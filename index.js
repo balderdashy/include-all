@@ -77,7 +77,7 @@ module.exports.optional = function(options, cb) {
 
 module.exports.exists = function(options, cb) {
   options.optional = true;
-  options.dontLoad = false;
+  options.dontLoad = true;
   return helpBuildDictionary(options, cb);
 };
 
