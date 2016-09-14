@@ -10,6 +10,29 @@ var loader = require('../');
 
 describe('basic usage of high-level async methods', function(){
 
+
+  it('should have stat-ed some files as expected', function (done){
+
+    loader.exists({
+      dirname: path.resolve(__dirname, './fixtures/brushfire-chp10-end/api/controllers'),
+      filter: /(.+\.js)$/
+    }, function (err, controllers){
+      if (err) { return done(err); }
+
+      try {
+        assert.deepEqual(controllers, {
+          'PageController.js': true,
+          'UserController.js': true,
+          'VideoController.js': true
+        });
+      } catch (e) { return done(e); }
+
+      return done();
+    });
+
+  });//</it should have stat-ed some files as expected>
+
+
   it('should have loaded some controllers as expected', function (done){
 
     loader.optional({
