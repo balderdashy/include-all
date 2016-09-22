@@ -27,6 +27,16 @@ describe('basic usage of synchronous, low-level function', function(){
       'other-Controller': {
         index: 1,
         show: 'nothing'
+      },
+
+      'level1': {
+        'level2': {
+          'level3': {
+            'nestedController': {
+              nestingLevel: 3
+            }
+          }
+        }
       }
     });
 
@@ -77,6 +87,67 @@ describe('basic usage of synchronous, low-level function', function(){
     assert.equal(excludedSvnAndSub['sub'], undefined);
 
   });//</it should have loaded stuff as expected>
+
+  describe('with flatten: true and keepDirectoryPath: false', function() {
+
+    it('should flatten nested folders into one level', function (){
+      var controllers = includeAll({
+        dirname: __dirname + '/fixtures/lowlvl/controllers',
+        filter: /(.+Controller)\.js$/,
+        flatten: true
+      });
+
+      assert.deepEqual(controllers, {
+        'main-Controller': {
+          index: 1,
+          show: 2,
+          add: 3,
+          edit: 4
+        },
+
+        'other-Controller': {
+          index: 1,
+          show: 'nothing'
+        },
+
+        'nestedController': {
+          nestingLevel: 3
+        }
+      });
+    });
+
+  });
+
+  describe('with flatten: true and keepDirectoryPath: true', function() {
+
+    it('should flatten nested folders into one level, keeping the directory path as part of the identity', function (){
+      var controllers = includeAll({
+        dirname: __dirname + '/fixtures/lowlvl/controllers',
+        filter: /(.+Controller)\.js$/,
+        flatten: true,
+        keepDirectoryPath: true
+      });
+
+      assert.deepEqual(controllers, {
+        'main-Controller': {
+          index: 1,
+          show: 2,
+          add: 3,
+          edit: 4
+        },
+
+        'other-Controller': {
+          index: 1,
+          show: 'nothing'
+        },
+
+        'level1/level2/level3/nestedController': {
+          nestingLevel: 3
+        }
+      });
+    });
+
+  });
 
 });//</describe :: basic usage of synchronous, low-level function>
 
