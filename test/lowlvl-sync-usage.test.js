@@ -2,6 +2,7 @@
  * Module dependencies
  */
 
+var path = require('path');
 var assert = require('assert');
 var includeAll = require('../');
 
@@ -12,7 +13,7 @@ describe('basic usage of synchronous, low-level function', function(){
   it('should have loaded stuff as expected', function (){
 
     var controllers = includeAll({
-      dirname: __dirname + '/fixtures/lowlvl/controllers',
+      dirname: path.join(__dirname, '/fixtures/lowlvl/controllers'),
       filter: /(.+Controller)\.js$/
     });
 
@@ -43,7 +44,7 @@ describe('basic usage of synchronous, low-level function', function(){
 
     if (process.version > 'v0.6.0') {
       var mydir = includeAll({
-        dirname: __dirname + '/fixtures/lowlvl/mydir',
+        dirname: path.join(__dirname, '/fixtures/lowlvl/mydir'),
         filter: /(.+)\.(js|json)$/
       });
 
@@ -58,7 +59,7 @@ describe('basic usage of synchronous, low-level function', function(){
     }
 
     var unfiltered = includeAll({
-      dirname: __dirname + '/fixtures/lowlvl/filterdir',
+      dirname: path.join(__dirname, '/fixtures/lowlvl/filterdir'),
       filter: /(.+)\.js$/
     });
 
@@ -67,7 +68,7 @@ describe('basic usage of synchronous, low-level function', function(){
     assert(unfiltered['sub']);
 
     var excludedSvn = includeAll({
-      dirname: __dirname + '/fixtures/lowlvl/filterdir',
+      dirname: path.join(__dirname + '/fixtures/lowlvl/filterdir'),
       filter: /(.+)\.js$/,
       excludeDirs: /^\.svn$/
     });
@@ -77,7 +78,7 @@ describe('basic usage of synchronous, low-level function', function(){
     assert.ok(excludedSvn['sub']);
 
     var excludedSvnAndSub = includeAll({
-      dirname: __dirname + '/fixtures/lowlvl/filterdir',
+      dirname: path.join(__dirname, '/fixtures/lowlvl/filterdir'),
       filter: /(.+)\.js$/,
       excludeDirs: /^(\.svn|sub)$/
     });
@@ -92,7 +93,7 @@ describe('basic usage of synchronous, low-level function', function(){
 
     it('should flatten nested folders into one level', function (){
       var controllers = includeAll({
-        dirname: __dirname + '/fixtures/lowlvl/controllers',
+        dirname: path.join(__dirname, '/fixtures/lowlvl/controllers'),
         filter: /(.+Controller)\.js$/,
         flatten: true
       });
@@ -122,7 +123,7 @@ describe('basic usage of synchronous, low-level function', function(){
 
     it('should flatten nested folders into one level, keeping the directory path as part of the identity', function (){
       var controllers = includeAll({
-        dirname: __dirname + '/fixtures/lowlvl/controllers',
+        dirname: path.join(__dirname, '/fixtures/lowlvl/controllers'),
         filter: /(.+Controller)\.js$/,
         flatten: true,
         keepDirectoryPath: true
