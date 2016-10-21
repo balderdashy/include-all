@@ -323,6 +323,31 @@ It adds a few extra capabilities on top:
 Since then, it has evolved quite a bit, but the base implementation is still the same.
 
 
+## Help
+
+First, please read through the documentation above.  If you have further questions or are having trouble, click [here](http://sailsjs.com/support).
+
+
+## Bugs &nbsp; [![NPM version](https://badge.fury.io/js/include-all.svg)](http://npmjs.com/package/include-all)
+
+To report a bug, [click here](http://sailsjs.com/bugs).
+
+
+## Contributing
+
+Please observe the guidelines and conventions laid out in the [Sails project contribution guide](http://sailsjs.com/contribute) when opening issues or submitting pull requests.
+
+[![NPM](https://nodei.co/npm/include-all.png?downloads=true)](http://npmjs.com/package/include-all)
+
+
 ## License
 
 MIT
+
+Copyright &copy; 2011 [Felix Geisendörfer](http://github.com/felixge)
+Copyright &copy; 2012 [Mike McNeil](http://github.com/mikermcneil)
+
+_A core module in the Sails framework since 2012._
+
+The [Sails framework](http://sailsjs.com) is free and open-source under the [MIT License](http://sailsjs.com/license).
+
