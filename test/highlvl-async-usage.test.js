@@ -172,6 +172,25 @@ describe('basic usage of high-level async methods', function(){
 
   });//</it should have aggregated some config as expected>
 
+  it('should maintain object references when merging modules together', function(done) {
+
+    loader.aggregate({
+      dirname: path.resolve(__dirname, './fixtures/test-refs/config'),
+      filter: /(.+)\.js$/
+    }, function (err, config){
+      if (err) { return done(err); }
+
+      assert(config.databases.someDb);
+
+      config.databases.someDb.init();
+
+      assert.equal(config.databases.someDb.publicData.stuff, 'things');
+
+      return done();
+    });
+
+  });//</should maintain object references when merging modules together>
+
 
 });//</describe>
 
