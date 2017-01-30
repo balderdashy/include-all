@@ -5,7 +5,7 @@
 var assert = require('assert');
 var path = require('path');
 var loader = require('../');
-var _ = require('lodash');
+var _ = require('@sailshq/lodash');
 
 
 
