@@ -129,7 +129,10 @@ describe('basic usage of synchronous, low-level function', function(){
         keepDirectoryPath: true
       });
 
-      assert.deepEqual(controllers, {
+      var nestKey = path.join('level1', 'level2', 'level3', 'nestedController');
+
+      var expected = {
+
         'main-Controller': {
           index: 1,
           show: 2,
@@ -140,12 +143,13 @@ describe('basic usage of synchronous, low-level function', function(){
         'other-Controller': {
           index: 1,
           show: 'nothing'
-        },
-
-        'level1/level2/level3/nestedController': {
-          nestingLevel: 3
         }
-      });
+
+      };
+
+      expected[nestKey] = { nestingLevel: 3};
+
+      assert.deepEqual(controllers, expected);
     });
 
   });
