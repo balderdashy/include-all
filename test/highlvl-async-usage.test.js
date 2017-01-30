@@ -5,6 +5,7 @@
 var assert = require('assert');
 var path = require('path');
 var loader = require('../');
+var _ = require('lodash');
 
 
 
@@ -172,16 +173,28 @@ describe('basic usage of high-level async methods', function(){
 
   });//</it should have aggregated some config as expected>
 
-  it('should maintain object references when merging modules together', function(done) {
+  // Test a couple of edge cases that are the reason why we use the `merge-dictionaries`
+  // module instead of using the Lodash `merge` function directly.
+  describe('edge cases', function() {
 
-    loader.aggregate({
-      dirname: path.resolve(__dirname, './fixtures/test-refs/config'),
-      filter: /(.+)\.js$/
-    }, function (err, config){
-      if (err) { return done(err); }
+    var config;
+    before(function(done) {
+      loader.aggregate({
+        dirname: path.resolve(__dirname, './fixtures/test-refs/config'),
+        filter: /(.+)\.js$/
+      }, function (err, _config){
+        if (err) { return done(err); }
+        // Sanity check that the config dictionaries were merged together.
+        assert(_config.databases.someDb);
 
-      // Sanity check that the config dictionaries were merged together.
-      assert(config.databases.someDb);
+        config = _config;
+        return done();
+
+      });
+
+    });
+
+    it('should maintain object references when merging modules together', function() {
 
       // Run the `init()` method of `someDb`, which is defined in `fixtures/test-refs/dbmodule`
       // and assigned via a `require()` in `fixtures/test-refs/config/databases.js`
@@ -195,10 +208,18 @@ describe('basic usage of high-level async methods', function(){
       // merge-dictionaries module instead fixes this problem, allowing this test to pass.
       assert.equal(config.databases.someDb.publicData.stuff, 'things');
 
-      return done();
-    });
 
-  });//</should maintain object references when merging modules together>
+    });//</should maintain object references when merging modules together>
+
+    it('should not attempt to merge arrays (it should replace array a with array b)', function() {
+
+      assert.equal(config.arr.someArray.length, 2);
+      assert.equal(config.arr.someArray[0], 'food');
+      assert.equal(config.arr.someArray[1], 'water');
+
+    });//</should not attempt to merge arrays>
+
+  });//</edge cases>
 
 
 });//</describe>
