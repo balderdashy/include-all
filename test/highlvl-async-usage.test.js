@@ -180,10 +180,19 @@ describe('basic usage of high-level async methods', function(){
     }, function (err, config){
       if (err) { return done(err); }
 
+      // Sanity check that the config dictionaries were merged together.
       assert(config.databases.someDb);
 
+      // Run the `init()` method of `someDb`, which is defined in `fixtures/test-refs/dbmodule`
+      // and assigned via a `require()` in `fixtures/test-refs/config/databases.js`
       config.databases.someDb.init();
 
+      // If include-all just used the Lodash _.merge, then the `publicData` dictionary
+      // which is initially empty in `fixtures/test-refs/dbmodule` would be recreated
+      // in the merged result rather than just using the same reference, so when we
+      // call `init()` which adds a key to `publicData`, the key would NOT be present
+      // when checking config.databases.someDb.publicData.  Using our custom
+      // merge-dictionaries module instead fixes this problem, allowing this test to pass.
       assert.equal(config.databases.someDb.publicData.stuff, 'things');
 
       return done();
