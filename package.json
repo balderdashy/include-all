@@ -1,6 +1,6 @@
 {
   "name": "include-all",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "An easy way to include all node.js modules within a directory.",
   "main": "index.js",
   "directories": {
