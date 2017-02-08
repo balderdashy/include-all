@@ -23,7 +23,7 @@
   "author": "felixge+thlorenz, adapted by Mike McNeil",
   "license": "MIT",
   "dependencies": {
-    "merge-dictionaries": "0.0.1",
+    "merge-dictionaries": "^0.0.3",
     "@sailshq/lodash": "^3.10.2"
   },
   "devDependencies": {
