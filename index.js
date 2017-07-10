@@ -2,9 +2,9 @@
  * Module dependencies
  */
 
+var _ = require('@sailshq/lodash');
 var helpBuildDictionary = require('./lib/help-build-dictionary');
 var helpIncludeAllSync = require('./lib/help-include-all-sync');
-
 
 /**
  * includeAll
@@ -24,7 +24,7 @@ var helpIncludeAllSync = require('./lib/help-include-all-sync');
 
 module.exports = function includeAllSync(options) {
   // This is the original, pre-v1 `include-all` usage.
-  return helpIncludeAllSync(options);
+  return helpIncludeAllSync(_.defaults(options, {useFilenameAsKey: true}));
 };
 
 
